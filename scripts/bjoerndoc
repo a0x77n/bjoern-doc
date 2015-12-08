@@ -1,0 +1,41 @@
+#!python
+
+import argparse
+import os
+import sys
+
+from bjoerndoc.bjoern_doc import parse
+
+parser = argparse.ArgumentParser(
+    description="BjornDoc -- Documentation tool for bjoern.")
+
+parser.add_argument(
+    "files",
+    type=argparse.FileType('r'),
+    nargs="+",
+    help="list of files containing bjoern steps")
+
+parser.add_argument(
+    "-d", "--destination",
+    default=os.getcwd(),
+    help="output directory for the documentation files")
+
+args = parser.parse_args()
+
+if not os.path.exists(args.destination):
+    os.makedirs(args.destination)
+else:
+    if os.path.isfile(args.destination):
+        sys.stderr.write("[ERROR] Output directory is a file.\n")
+        sys.exit(1)
+
+for f in args.files:
+    print("Processing {} ...".format(f.name), end=' ')
+    root, _ = os.path.splitext(os.path.basename(f.name))
+    g = os.path.join(args.destination, root + '.xml')
+    if os.path.exists(g):
+        print("skipped")
+        continue
+    tree = parse(f)
+    tree.write(g)
+    print("done")
